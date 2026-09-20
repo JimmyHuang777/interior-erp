@@ -4,6 +4,7 @@ import { eq, asc } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
 import { auth } from "@/auth";
 import { logAction } from "@/lib/audit";
+import ProjectPicker from "@/components/ProjectPicker";
 
 async function addStage(formData: FormData) {
   "use server";
@@ -55,20 +56,9 @@ export default async function DesignPage({
       <h1 className="text-2xl font-semibold text-slate-900 mb-1">設計管理</h1>
       <p className="text-sm text-slate-500 mb-6">設計流程追蹤・各階段收款・材料板管理・業主確認紀錄</p>
 
-      <form method="get" className="mb-6">
-        <select
-          name="projectId"
-          defaultValue={activeProjectId}
-          onChange={(e) => e.currentTarget.form?.submit()}
-          className="border border-slate-300 rounded px-3 py-2 text-sm"
-        >
-          {projectRows.map((p) => (
-            <option key={p.id} value={p.id}>
-              {p.name}
-            </option>
-          ))}
-        </select>
-      </form>
+      <div className="mb-6">
+        <ProjectPicker basePath="/dashboard/design" projects={projectRows} activeProjectId={activeProjectId} />
+      </div>
 
       {activeProjectId && (
         <>

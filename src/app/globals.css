@@ -17,3 +17,16 @@ body {
     -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue",
     Arial, "PingFang TC", "Noto Sans TC", sans-serif;
 }
+
+@media print {
+  .no-print,
+  aside {
+    display: none !important;
+  }
+  main {
+    overflow: visible !important;
+  }
+  body {
+    background: #fff !important;
+  }
+}

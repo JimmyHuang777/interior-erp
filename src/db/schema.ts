@@ -149,18 +149,53 @@ export const designStages = pgTable("design_stages", {
 });
 
 // ---------- 價值工程（報價）----------
-export const quoteItems = pgTable("quote_items", {
+export const quoteVersions = pgTable("quote_versions", {
   id: uuid("id").primaryKey().defaultRandom(),
   projectId: uuid("project_id")
     .notNull()
     .references(() => projects.id, { onDelete: "cascade" }),
-  tradeId: uuid("trade_id").references(() => trades.id),
+  name: varchar("name", { length: 100 }).notNull().default("版本 1"),
+  costMultiplier: numeric("cost_multiplier", { precision: 6, scale: 3 })
+    .notNull()
+    .default("1.2"), // 成本倍率：業主單價 = 成本單價 × 倍率（未手動調整時）
+  sortOrder: integer("sort_order").notNull().default(0),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+});
+
+export const quoteItems = pgTable("quote_items", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  versionId: uuid("version_id")
+    .notNull()
+    .references(() => quoteVersions.id, { onDelete: "cascade" }),
+  projectId: uuid("project_id")
+    .notNull()
+    .references(() => projects.id, { onDelete: "cascade" }),
+  tradeId: uuid("trade_id").references(() => trades.id), // 工種分類（假設工程/拆除工程...）
   materialId: uuid("material_id").references(() => materials.id),
   itemName: varchar("item_name", { length: 200 }).notNull(),
   unit: varchar("unit", { length: 30 }),
   quantity: numeric("quantity", { precision: 12, scale: 2 }).default("0"),
-  unitPrice: numeric("unit_price", { precision: 12, scale: 2 }).default("0"),
+  unitPrice: numeric("unit_price", { precision: 12, scale: 2 }).default("0"), // 成本單價
+  ownerUnitPrice: numeric("owner_unit_price", { precision: 12, scale: 2 }), // null = 自動用成本倍率換算；有值 = 已手動調整
+  notes: varchar("notes", { length: 300 }),
+  colorTag: varchar("color_tag", { length: 20 }),
   sortOrder: integer("sort_order").notNull().default(0),
+});
+
+// 估價版本內的追加減項目（跟工程管理的追加減是不同東西：這裡是報價階段的調整）
+export const quoteChangeOrders = pgTable("quote_change_orders", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  versionId: uuid("version_id")
+    .notNull()
+    .references(() => quoteVersions.id, { onDelete: "cascade" }),
+  itemName: varchar("item_name", { length: 200 }).notNull(),
+  quantity: numeric("quantity", { precision: 12, scale: 2 }).default("1"),
+  unit: varchar("unit", { length: 30 }),
+  unitPrice: numeric("unit_price", { precision: 12, scale: 2 }).default("0"), // 成本單價，減項用負數
+  ownerUnitPrice: numeric("owner_unit_price", { precision: 12, scale: 2 }),
+  notes: varchar("notes", { length: 300 }),
+  sortOrder: integer("sort_order").notNull().default(0),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
 });
 
 // ---------- 合約工程 ----------
